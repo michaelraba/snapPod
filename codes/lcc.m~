@@ -1,0 +1,19 @@
+%function lcc()
+clear;clc
+rehash toolbox
+configCluster
+%/usr/local/MATLAB/R2019
+c=parcluster;
+c.AdditionalProperties.WallTime = '0:20:0';
+%c.AdditionalProperties.QueueName = 'SAN16M64_L';
+c.AdditionalProperties.QueueName = 'CAC48M192_L';
+c.AdditionalProperties.AccountName = 'col_cbr285_uksr';
+%https://www.hpc.iastate.edu/guides/using-matlab-parallel-server nodes
+c.AdditionalProperties.NumNodes = 2;
+c.AdditionalProperties.ProcsPerNode = 20; 
+c.AdditionalProperties.EmailAddress='miraba2@uky.edu'
+%c.AdditionalProperties.AccountName = 'col_vgazu2_uksr';
+c.saveProfile
+c.AdditionalProperties
+%c.AdditionalSubmitArgs = '-N 18 -n 200'
+%end
