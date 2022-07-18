@@ -112,6 +112,28 @@ elseif initStr=="ii1" % for truncating out the time when we feed eahc itme step 
   %qq=struct('dat',repmat({zeros(ntimesteps*blocLength,ntimesteps*blocLength)}, [ss,1]));
   qq=struct('dat',repmat({zeros(ntimesteps*blocLength,1)}, [ss,1]));
 
+elseif initStr=="ii1t" % for truncating out the time when we feed eahc itme step to the azimuth fucnciton.
+  %qq=struct('dat',repmat({zeros(ntimesteps*blocLength,ntimesteps*blocLength)}, [ss,1]));
+  qq=struct('dat',repmat({zeros(ntimesteps,1)}, [ss,1]));
+
+elseif initStr=="ii1_additiveRead" % for truncating out the time when we feed eahc itme step to the azimuth fucnciton.
+  %qq=struct('dat',repmat({zeros(ntimesteps*blocLength,ntimesteps*blocLength)}, [ss,1]));
+  qq=struct('dat',repmat({zeros(ntimesteps*blocLength,1)}, [ss,1]));
+elseif initStr=="RavStack" % for truncating out the time when we feed eahc itme step to the azimuth fucnciton.
+  qq=struct('dat',repmat({zeros(ntimesteps,ntimesteps*blocLength)}, [blocLength,1]));
+
+
+elseif initStr=="ii1t2" % for truncating out the time when we feed eahc itme step to the azimuth fucnciton.
+  %qq=struct('dat',repmat({zeros(ntimesteps*blocLength,ntimesteps*blocLength)}, [ss,1]));
+  %qq=struct('dat',repmat({zeros(ntimesteps,1)}, [ss,1]));
+  qq=struct('r', repmat({struct('dat',repmat({zeros(ntimesteps,1)}, [ss,1]))} , [blocLength,1]));
+
+
+elseif initStr=="ii1b" % for truncating out the time when we feed eahc itme step to the azimuth fucnciton.
+  %qq=struct('dat',repmat({zeros(ntimesteps*blocLength,ntimesteps*blocLength)}, [ss,1]));
+  qq=struct('dat',repmat({zeros(ntimesteps*(blocLength+1),1)}, [ss,1]));
+
+
 elseif initStr=="cAplot" %redo
   %qq=struct('dat',repmat({zeros(540,1)}, [azimuthalSetSize,1]));
   qq=struct('p', repmat({struct('dat',repmat({zeros(ss,1)}, [3,1]))} , [azimuthalSetSize,1]));

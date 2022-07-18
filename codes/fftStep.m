@@ -5,13 +5,19 @@
      [phiVec]=initData2("snapshotPhiVec");
      [phiVecNormalized]=initData2("snapshotPhiVec");
 
+cluster = parcluster;
+
+sz=1;
+ %saveStr=[saveDir 'hi[Case]C' num2str(ncs) 'T' num2str(ntimesteps) '[crossSec]' num2str(c) '[TimeBloc]' num2str(timeBloc) '.mat'       ];
+ %save(saveStr,'sz','-v7.3');
+
 
  rMat=0:dr:.50001; % [0, ...,0.5] with 540 elements %  needs checked
   if stepStr=="readDataAndFindVeloFluctuation"
     [qMinusQbar_noCsYet]=initData2("qMinusQbar_noCsYet"); % initialize avg struct
     [qMinusQbar]=initData2("qMinusQbar"); % initialize avg struct
     [myPreFft_noCsYet]=initData2("myPreFft_noCsYet");
-    [avgPreFft_noCsYet]=initData2("avgPreFft_noCsYet");
+    %[avgPreFft_noCsYet]=initData2("avgPreFft_noCsYet");
     [xcorrDone]=initData2("azimuthDoneXcorrDone");
     [qMinusQbar_noCsYet]=initData2("qMinusQbar_noCsYet");
     [xdirNew]=initData2("xdirNew");
@@ -21,16 +27,23 @@
 
 
     for c = 1:ncs  % crosssection
+
     %% Step A) load a chonk into memory and read circles in.
     for timeBloc=1:blocLength
-    parfor t = 1:ntimesteps % time % <-- nb, this is the parfor loop.
+    parfor t = 1:ntimesteps % parfor loop. % this seems to work on the cluster
+    %parfor (t = 1:ntimesteps , parcluster) % parfor loop. % this makes job crash.
+    %for t = 1:ntimesteps % parfor loop.
+
     myPreFft_noCsNoTimeYet=readCircles2(timeBloc*t,c);
     myPreFft_noCsYet(t).circle=myPreFft_noCsNoTimeYet;
     sprintf('%s','pause')
     end % parfor
     % after each block is done, find the average
-    for t = 1:ntimesteps % time % <-- nb, this is the parfor loop.
-      if timeBloc==blocLength && t==ntimesteps
+    % adding parfor here seems to break it: (take out and it runs)
+    parfor t = 1:ntimesteps % time % <-- nb, this is the parfor loop.
+          [avgPreFft_noCsYet]=initData2("avgPreFft_noCsYet");
+
+        if timeBloc==blocLength && t==ntimesteps
         lastStr="last";
       else
         lastStr="notLast";
@@ -40,7 +53,7 @@
     end % timeBloc
 
     for timeBloc=1:blocLength
-    for t = 1:ntimesteps % time % parfor
+    parfor t = 1:ntimesteps % time % parfor % pl runs
 % load in time bloc again
         myPreFft_noCsNoTimeYet=readCircles2(timeBloc*t,c);
         myPreFft_noCsYet(t).circle=myPreFft_noCsNoTimeYet;
@@ -70,7 +83,7 @@ saveStr=[saveDir 'postAzimuth[Case]C' num2str(ncs) 'T' num2str(ntimesteps) '[cro
 qq=open(saveStr);
 sprintf('%s','start azimuthal')
 % now re-organize:
-for t=1:ntimesteps %parfor
+parfor t=1:ntimesteps %parfor
 for r=1:540 % 
     azimCounter=1;
 for m=1:azimuthalSetSize
@@ -85,7 +98,7 @@ end % t (little)
 sprintf('%s%d%s%d%s','done filling in a crosssec for timeBloc=', timeBloc, ' and t=',t,'.')
 end % c
 % begin fft x-dir
-for t=1:ntimesteps % parfor
+parfor t=1:ntimesteps % parfor
 for r=1:540 % this should be 540..................
 for m=1:azimuthalSetSize
   aa = xdirNew(t).RadialCircle(r).azimuth(m).dat;
@@ -103,56 +116,56 @@ end % t (little)
 %%
 end % timebloc 
 
-aMat = zeros(540,1);
-
-% form corrmat before averginng in r 
-corrMat = zeros(ntimesteps*blocLength,ntimesteps*blocLength);
-for tBloc=1:blocLength
-% open blocfile
-sprintf('%s%s%s%s','Form Corrmat: c',num2str(c),'m',num2str(m))
-saveStr=[saveDir 'xdirPostFft[Case]C' num2str(ncs) 'T' num2str(ntimesteps) '[crossSec]' num2str(c) '[TimeBloc]' num2str(timeBloc) '.mat'       ];
-qq=open(saveStr);
-xdirPostFft=qq.xdirPostFft;
-for c=1:ncs
-for m=1:azimuthalSetSize
-for r=1:540
-for t=1:ntimesteps
-aa = xdirPostFft(t).RadialCircle(r).azimuth(m).dat(c,1);
-collectTimeForCorrMatPreAvg(m).c(c).r(r).dat(ntimesteps*(tBloc - 1) + t,1)=aa;
-end %t
-if t==ntimesteps & tBloc==blocLength
-az=collectTimeForCorrMatPreAvg(m).c(c).r(r).dat;
-corrMatPreAvg(m).c(c).r(r).dat=az*ctranspose(az);
-end % if t 
-end %r
-end %m
-end %c
-end %tB
-
-%% r-average.
-for timeBloc=1:blocLength
-for c=1:ncs
-for m=1:azimuthalSetSize
-
-for t=1:ntimesteps
-for tPr=1:ntimesteps
-
-for r=1:540
-   %aa = xdirPostFft(t).RadialCircle(r).azimuth(m).dat(c,1);
-   aa=corrMatPreAvg(m).c(c).r(r).dat(ntimesteps*(timeBloc-1)+t,ntimesteps*(timeBloc-1)+tPr);
-   aMat(r) = rMat(r)*aa; % aa should be tt correlation
-end % r
-Rint = trapz(aMat);
-%Rmat_avg(t).cs(c).circle(m)= Rint; % smits17.eq.below.eq.2.4 % needs checking.
-corrMatRavg(m).c(c).dat(t*tBloc,tPr*tBloc)= Rint; % smits17.eq.below.eq.2.4 % needs checking.
-end % tPr (little)
-end % t (little)
-%% end % timeBloc
-        saveStr=[saveDir '/corrMatRavg[Case]C' num2str(ncs) 'T' num2str(ntimesteps) '[crossSec]' num2str(c) '.mat'];
-        save(saveStr,'corrMatRavg','-v7.3');
-qq = xdirPostFft;
-[phiVec,phiVecNormalized]=snapshotPod(m,c,corrMatRavg(m).c(c).dat,collectTimeForCorrMatPreAvg(m).c(c),phiVec,phiVecNormalized); % m c mode.
-end %m
-end %c
- end % bloc
+% aMat = zeros(540,1);
+% 
+% % form corrmat before averginng in r 
+% corrMat = zeros(ntimesteps*blocLength,ntimesteps*blocLength);
+% for tBloc=1:blocLength
+% % open blocfile
+% sprintf('%s%s%s%s','Form Corrmat: c',num2str(c),'m',num2str(m))
+% saveStr=[saveDir 'xdirPostFft[Case]C' num2str(ncs) 'T' num2str(ntimesteps) '[crossSec]' num2str(c) '[TimeBloc]' num2str(timeBloc) '.mat'       ];
+% qq=open(saveStr);
+% xdirPostFft=qq.xdirPostFft;
+% for c=1:ncs
+% for m=1:azimuthalSetSize
+% for r=1:540
+% for t=1:ntimesteps
+% aa = xdirPostFft(t).RadialCircle(r).azimuth(m).dat(c,1);
+% collectTimeForCorrMatPreAvg(m).c(c).r(r).dat(ntimesteps*(tBloc - 1) + t,1)=aa;
+% end %t
+% if t==ntimesteps & tBloc==blocLength
+% az=collectTimeForCorrMatPreAvg(m).c(c).r(r).dat;
+% corrMatPreAvg(m).c(c).r(r).dat=az*ctranspose(az);
+% end % if t 
+% end %r
+% end %m
+% end %c
+% end %tB
+% 
+% %% r-average.
+% for timeBloc=1:blocLength
+% for c=1:ncs
+% for m=1:azimuthalSetSize
+% 
+% for t=1:ntimesteps
+% for tPr=1:ntimesteps
+% 
+% for r=1:540
+%    %aa = xdirPostFft(t).RadialCircle(r).azimuth(m).dat(c,1);
+%    aa=corrMatPreAvg(m).c(c).r(r).dat(ntimesteps*(timeBloc-1)+t,ntimesteps*(timeBloc-1)+tPr);
+%    aMat(r) = rMat(r)*aa; % aa should be tt correlation
+% end % r
+% Rint = trapz(aMat);
+% %Rmat_avg(t).cs(c).circle(m)= Rint; % smits17.eq.below.eq.2.4 % needs checking.
+% corrMatRavg(m).c(c).dat(t*tBloc,tPr*tBloc)= Rint; % smits17.eq.below.eq.2.4 % needs checking.
+% end % tPr (little)
+% end % t (little)
+% %% end % timeBloc
+%         saveStr=[saveDir '/corrMatRavg[Case]C' num2str(ncs) 'T' num2str(ntimesteps) '[crossSec]' num2str(c) '.mat'];
+%         save(saveStr,'corrMatRavg','-v7.3');
+% qq = xdirPostFft;
+% [phiVec,phiVecNormalized]=snapshotPod(m,c,corrMatRavg(m).c(c).dat,collectTimeForCorrMatPreAvg(m).c(c),phiVec,phiVecNormalized); % m c mode.
+% end %m
+% end %c
+%  end % bloc
  end %fc

@@ -1,0 +1,5 @@
+for zii=1:3000000
+    diary(j)
+    datetime('now')
+   w pause(1)
+end

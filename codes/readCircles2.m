@@ -9,7 +9,10 @@ function [myPreFft_noCsYet]=readCircles2(t,c) % redo for parfor loop.
       M_mat = zeros(540,540); % streamwiseData
       cc = sprintf( '%03d', c  ) ;
       tt = sprintf( '%04d', t  ) ;
-      daPath = '/mnt/interest/rawPipeRe5600/';
+      %daPath = '/mnt/interest/rawPipeRe5600/';
+      daPath = '/scratch/miraba2/5300Snaps/';
+      %daPath = '/home/mi/lccSnaps/';
+
       fileName = [ daPath 'snap_cs_' num2str(cc) '_ts_' num2str(tt) '.dat']; % t starts at 0.
       formatSpec = '%f';
       a=fopen(fileName, 'r');

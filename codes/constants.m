@@ -9,8 +9,8 @@ rMax = 1080;
 timeSet=1:1:43;
 %timeSet=1:1:3;
 
-%csSet=1:1:1;
 csSet=1:1:99;
+%csSet=1:1:99;
 
 %timeSet=1:2:600;
 ntimesteps = size(timeSet) ;ntimesteps= ntimesteps(2);
@@ -18,7 +18,7 @@ csSize = size(csSet);
 ncs = csSize(2);
 %ncs =6; 
 %blocLength= 23;
-blocLength= 3;
+blocLength= 2;
 
 
 %ntimesteps =40; % also the number of workers assigned. % 
@@ -35,7 +35,11 @@ azimuthalSetSize=azimuthalSetSizeb(2);
 printStatus="on";
 %ntimesteps = 988; % fft mode
 ss=540;
-saveDir='/mnt/macOs/fullRunJun29/';
+saveDir='/mnt/macOs/fullRunJul12/'; %locall's
+%saveDir='/scratch/miraba2/jul12/'; %lcc's
+%saveDir='/home/mi/lccPostFft/'; % this only works locally. cant use for lcc
+%runs
+
 %cMin = 1;
 %format long
 end
